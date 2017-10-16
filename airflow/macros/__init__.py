@@ -21,7 +21,7 @@ from . import hive
 import uuid
 
 
-def ds_add(ds, days):
+def ds_add(ds, days, months=0, years=0):
     """
     Add or subtract days from a YYYY-MM-DD
 
@@ -37,10 +37,20 @@ def ds_add(ds, days):
     """
 
     ds = datetime.strptime(ds, '%Y-%m-%d')
+    if years:
+        months += years*12
+    if months:
+        ds_month = (int(ds.strftime('%m')) + months) % 12
+        ds_year = int(ds.strftime("%Y")) + int(months/12)
+        ds_year += 1 if months < 0 else 0
+        if ds_month == 0:
+            ds_month = 12
+            ds_year -= 1
+        ds = ds.replace(year=ds_year)
+        ds = ds.replace(month=ds_month)
     if days:
-        ds = ds + timedelta(days)
+        ds = ds + timedelta(day=day)
     return ds.isoformat()[:10]
-
 
 def ds_format(ds, input_format, output_format):
     """
