@@ -1488,7 +1488,6 @@ class TaskInstance(Base):
                 self.state = State.UP_FOR_RETRY
                 logging.info('Marking task as UP_FOR_RETRY')
                 if task.email_on_retry and task.email:
-                    self.email_alert(error, is_retry=True)
                     self.datadog_event_alert(error, is_retry=True)
             else:
                 stats_incr_helper('task_failed', 1, task.dag_id, task.task_id)
@@ -1498,7 +1497,6 @@ class TaskInstance(Base):
                 else:
                     logging.info('Marking task as FAILED.')
                 if task.email_on_failure and task.email:
-                    self.email_alert(error, is_retry=False)
                     self.datadog_event_alert(error, is_retry=False)
         except Exception as e2:
             logging.error(
@@ -1660,22 +1658,7 @@ class TaskInstance(Base):
             dd_initialize(**options)
             datadog_api.Event.create(**args)
         else:
-            logging.info("event-sent: title={title}, text={text}, tags={tags}".format(**args))
-
-    def email_alert(self, exception, is_retry=False):
-        task = self.task
-        title = "Airflow alert: {self}".format(**locals())
-        exception = str(exception).replace('\n', '<br>')
-        try_ = task.retries + 1
-        body = (
-            "Try {self.try_number} out of {try_}<br>"
-            "Exception:<br>{exception}<br>"
-            "Log: <a href='{self.log_url}'>Link</a><br>"
-            "Host: {self.hostname}<br>"
-            "Log file: {self.log_filepath}<br>"
-            "Mark success: <a href='{self.mark_success_url}'>Link</a><br>"
-        ).format(**locals())
-        send_email(task.email, title, body)
+            logging.info("Event: title={title}, text={text}, tags={tags}".format(**args))
 
     def set_duration(self):
         if self.end_date and self.start_date:
